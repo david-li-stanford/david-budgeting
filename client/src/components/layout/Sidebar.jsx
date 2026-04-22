@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
+import { useAuth } from '../../hooks/useAuth'
 import clsx from 'clsx'
 import { useCheckingAccounts } from '../../hooks/useAccounts'
 import { useInvestmentAccounts } from '../../hooks/useAccounts'
@@ -83,6 +84,7 @@ function AddAccountModal({ type, onClose, onAdd }) {
 
 export default function Sidebar() {
   const navigate = useNavigate()
+  const { signOut } = useAuth()
   const { accounts: checking, addAccount: addChecking } = useCheckingAccounts()
   const { accounts: investment, addAccount: addInvestment } = useInvestmentAccounts()
   const [modal, setModal] = useState(null) // 'checking' | 'investment' | null
@@ -201,8 +203,15 @@ export default function Sidebar() {
         </nav>
 
         {/* Footer */}
-        <div className="px-4 py-3 border-t border-taupe/30 text-xs text-warmGray/50 text-center">
-          David's Budget
+        <div className="px-4 py-3 border-t border-taupe/30 flex items-center justify-between">
+          <span className="text-xs text-warmGray/50">David's Budget</span>
+          <button
+            onClick={signOut}
+            className="text-xs text-warmGray hover:text-danger transition-colors"
+            title="Sign out"
+          >
+            Sign out
+          </button>
         </div>
       </aside>
 
