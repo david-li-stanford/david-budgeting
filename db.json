@@ -1,0 +1,41 @@
+{
+  "settings": {
+    "id": "global",
+    "monthlyIncome": 6500,
+    "currency": "USD",
+    "distribution": []
+  },
+  "checkingAccounts": [
+    {
+      "id": "chk-1",
+      "name": "Chase Checking",
+      "balance": 8322.83,
+      "institution": "Chase",
+      "createdAt": "2025-01-01"
+    }
+  ],
+  "investmentAccounts": [
+    {
+      "id": "inv-1",
+      "name": "Emergency Fund",
+      "accountType": "savings",
+      "balance": 12000,
+      "institution": "Marcus",
+      "annualReturnRate": 4.5,
+      "monthlyContribution": 200,
+      "createdAt": "2024-06-01"
+    },
+    {
+      "id": "inv-2",
+      "name": "Brokerage",
+      "accountType": "brokerage",
+      "balance": 28500,
+      "institution": "Fidelity",
+      "annualReturnRate": 8,
+      "monthlyContribution": 500,
+      "createdAt": "2023-01-15"
+    }
+  ],
+  "expenses": [],
+  "forecastScenarios": []
+}
