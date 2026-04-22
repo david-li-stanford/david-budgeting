@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(rm -f /c/Users/tidal/.vscode/david-budgeting/client/src/App.css)",
+      "Bash(rm -f /c/Users/tidal/.vscode/david-budgeting/client/tailwind.config.js.bak)",
+      "Bash(curl -s http://localhost:3001/settings)",
+      "Bash(kill %1)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
+    ]
+  }
+}

@@ -8,6 +8,7 @@ import { formatCurrency } from '../utils/formatCurrency'
 import ExpenseList from '../components/checking/ExpenseList'
 import CashFlowBarChart from '../components/charts/CashFlowBarChart'
 import ExpensePieChart from '../components/charts/ExpensePieChart'
+import MonthlyHistoryCard from '../components/checking/MonthlyHistoryCard'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
@@ -57,9 +58,33 @@ export default function CheckingAccountPage() {
   if (!account) return <div className="p-8 text-warmGray">Account not found.</div>
 
   const allocatedIncome = getAllocationForAccount(settings?.monthlyIncome || 0, settings?.distribution || [], accountId)
-  const activeExpenses = expenses.filter((e) => e.isActive)
-  const totalExpenses = activeExpenses.reduce((s, e) => s + e.amount, 0)
-  const surplus = allocatedIncome - totalExpenses
+
+  const now = new Date()
+  const thisMonthExpenses = expenses.filter((e) => {
+    const d = new Date(e.createdAt)
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+  })
+  const totalThisMonth = thisMonthExpenses.reduce((s, e) => s + e.amount, 0)
+  const surplus = allocatedIncome - totalThisMonth
+
+  const handleAddExpense = async (data) => {
+    await addExpense(data)
+    await updateAccount(accountId, { balance: account.balance - (parseFloat(data.amount) || 0) })
+  }
+
+  const handleUpdateExpense = async (id, data) => {
+    const old = expenses.find((e) => e.id === id)
+    await updateExpense(id, data)
+    if (data.amount !== undefined && old) {
+      const diff = old.amount - (parseFloat(data.amount) || 0)
+      if (diff !== 0) await updateAccount(accountId, { balance: account.balance + diff })
+    }
+  }
+
+  const handleDeleteExpense = async (expense) => {
+    await removeExpense(expense.id)
+    await updateAccount(accountId, { balance: account.balance + expense.amount })
+  }
 
   return (
     <div className="p-8 max-w-5xl mx-auto space-y-6">
@@ -90,29 +115,35 @@ export default function CheckingAccountPage() {
           <p className={`text-3xl font-semibold tabular-nums ${surplus >= 0 ? 'text-amber' : 'text-danger'}`}>
             {formatCurrency(Math.abs(surplus))}
           </p>
-          <p className="text-xs text-warmGray mt-1">after expenses</p>
+          <p className="text-xs text-warmGray mt-1">this month</p>
         </Card>
       </div>
 
       {/* Charts row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <Card>
-          <p className="section-title mb-4">Cash Flow</p>
-          <CashFlowBarChart allocatedIncome={allocatedIncome} totalExpenses={totalExpenses} />
+          <p className="section-title mb-1">This Month's Cash Flow</p>
+          <p className="text-xs text-warmGray mb-4">
+            {now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+          </p>
+          <CashFlowBarChart allocatedIncome={allocatedIncome} totalExpenses={totalThisMonth} />
         </Card>
         <Card>
-          <p className="section-title mb-4">Expense Breakdown</p>
-          <ExpensePieChart expenses={expenses} />
+          <p className="section-title mb-1">This Month's Breakdown</p>
+          <p className="text-xs text-warmGray mb-4">By category</p>
+          <ExpensePieChart expenses={thisMonthExpenses} />
         </Card>
       </div>
+
+      <MonthlyHistoryCard expenses={expenses} allocatedIncome={allocatedIncome} />
 
       {/* Expense List */}
       <Card>
         <ExpenseList
           expenses={expenses}
-          onAdd={addExpense}
-          onUpdate={updateExpense}
-          onDelete={removeExpense}
+          onAdd={handleAddExpense}
+          onUpdate={handleUpdateExpense}
+          onDelete={handleDeleteExpense}
         />
       </Card>
 

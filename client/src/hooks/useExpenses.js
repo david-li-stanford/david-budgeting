@@ -22,7 +22,12 @@ export function useExpenses(accountId) {
 
   const addExpense = async (data) => {
     const id = crypto.randomUUID()
-    const created = await createExpense({ ...data, id, accountId })
+    const created = await createExpense({
+      ...data,
+      id,
+      accountId,
+      createdAt: new Date().toISOString(),
+    })
     setExpenses((prev) => [...prev, created])
     return created
   }

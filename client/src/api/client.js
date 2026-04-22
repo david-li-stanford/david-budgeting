@@ -1,83 +1,143 @@
-const BASE = '/api'
+import { createClient } from '@supabase/supabase-js'
 
-async function handle(res) {
-  if (!res.ok) {
-    const text = await res.text().catch(() => res.statusText)
-    throw new Error(`API error ${res.status}: ${text}`)
-  }
-  if (res.status === 204) return null
-  return res.json()
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+)
+
+function check(error) {
+  if (error) throw new Error(error.message)
 }
 
 // Settings
-export const getSettings = () => fetch(`${BASE}/settings`).then(handle)
-export const patchSettings = (data) =>
-  fetch(`${BASE}/settings`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  }).then(handle)
+export const getSettings = async () => {
+  const { data, error } = await supabase
+    .from('settings')
+    .select('*')
+    .eq('id', 'global')
+    .single()
+  check(error)
+  return data
+}
+
+export const patchSettings = async (updates) => {
+  const { data, error } = await supabase
+    .from('settings')
+    .upsert({ id: 'global', ...updates })
+    .select()
+    .single()
+  check(error)
+  return data
+}
 
 // Checking Accounts
-export const getCheckingAccounts = () => fetch(`${BASE}/checkingAccounts`).then(handle)
-export const createCheckingAccount = (data) =>
-  fetch(`${BASE}/checkingAccounts`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  }).then(handle)
-export const patchCheckingAccount = (id, data) =>
-  fetch(`${BASE}/checkingAccounts/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  }).then(handle)
-export const deleteCheckingAccount = (id) =>
-  fetch(`${BASE}/checkingAccounts/${id}`, { method: 'DELETE' }).then(handle)
+export const getCheckingAccounts = async () => {
+  const { data, error } = await supabase.from('checkingAccounts').select('*')
+  check(error)
+  return data
+}
+
+export const createCheckingAccount = async (account) => {
+  const { data, error } = await supabase.from('checkingAccounts').insert(account).select().single()
+  check(error)
+  return data
+}
+
+export const patchCheckingAccount = async (id, updates) => {
+  const { data, error } = await supabase.from('checkingAccounts').update(updates).eq('id', id).select().single()
+  check(error)
+  return data
+}
+
+export const deleteCheckingAccount = async (id) => {
+  const { error } = await supabase.from('checkingAccounts').delete().eq('id', id)
+  check(error)
+}
 
 // Investment Accounts
-export const getInvestmentAccounts = () => fetch(`${BASE}/investmentAccounts`).then(handle)
-export const createInvestmentAccount = (data) =>
-  fetch(`${BASE}/investmentAccounts`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  }).then(handle)
-export const patchInvestmentAccount = (id, data) =>
-  fetch(`${BASE}/investmentAccounts/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  }).then(handle)
-export const deleteInvestmentAccount = (id) =>
-  fetch(`${BASE}/investmentAccounts/${id}`, { method: 'DELETE' }).then(handle)
+export const getInvestmentAccounts = async () => {
+  const { data, error } = await supabase.from('investmentAccounts').select('*')
+  check(error)
+  return data
+}
+
+export const createInvestmentAccount = async (account) => {
+  const { data, error } = await supabase.from('investmentAccounts').insert(account).select().single()
+  check(error)
+  return data
+}
+
+export const patchInvestmentAccount = async (id, updates) => {
+  const { data, error } = await supabase.from('investmentAccounts').update(updates).eq('id', id).select().single()
+  check(error)
+  return data
+}
+
+export const deleteInvestmentAccount = async (id) => {
+  const { error } = await supabase.from('investmentAccounts').delete().eq('id', id)
+  check(error)
+}
 
 // Expenses
-export const getExpenses = (accountId) =>
-  fetch(`${BASE}/expenses?accountId=${accountId}`).then(handle)
-export const createExpense = (data) =>
-  fetch(`${BASE}/expenses`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  }).then(handle)
-export const patchExpense = (id, data) =>
-  fetch(`${BASE}/expenses/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  }).then(handle)
-export const deleteExpense = (id) =>
-  fetch(`${BASE}/expenses/${id}`, { method: 'DELETE' }).then(handle)
+export const getExpenses = async (accountId) => {
+  const { data, error } = await supabase
+    .from('expenses')
+    .select('*')
+    .eq('accountId', accountId)
+  check(error)
+  return data
+}
+
+export const createExpense = async (expense) => {
+  const { data, error } = await supabase.from('expenses').insert(expense).select().single()
+  check(error)
+  return data
+}
+
+export const patchExpense = async (id, updates) => {
+  const { data, error } = await supabase.from('expenses').update(updates).eq('id', id).select().single()
+  check(error)
+  return data
+}
+
+export const deleteExpense = async (id) => {
+  const { error } = await supabase.from('expenses').delete().eq('id', id)
+  check(error)
+}
 
 // Forecast Scenarios
-export const getForecastScenarios = (accountId) =>
-  fetch(`${BASE}/forecastScenarios?accountId=${accountId}`).then(handle)
-export const createForecastScenario = (data) =>
-  fetch(`${BASE}/forecastScenarios`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  }).then(handle)
-export const deleteForecastScenario = (id) =>
-  fetch(`${BASE}/forecastScenarios/${id}`, { method: 'DELETE' }).then(handle)
+export const getForecastScenarios = async (accountId) => {
+  const { data, error } = await supabase
+    .from('forecastScenarios')
+    .select('*')
+    .eq('accountId', accountId)
+  check(error)
+  return data
+}
+
+export const createForecastScenario = async (scenario) => {
+  const { data, error } = await supabase.from('forecastScenarios').insert(scenario).select().single()
+  check(error)
+  return data
+}
+
+export const deleteForecastScenario = async (id) => {
+  const { error } = await supabase.from('forecastScenarios').delete().eq('id', id)
+  check(error)
+}
+
+// Deposit History
+export const getDepositHistory = async () => {
+  const { data, error } = await supabase
+    .from('depositHistory')
+    .select('*')
+    .order('date', { ascending: false })
+  check(error)
+  return data
+}
+
+export const createDeposit = async (deposit) => {
+  const { data, error } = await supabase.from('depositHistory').insert(deposit).select().single()
+  check(error)
+  return data
+}

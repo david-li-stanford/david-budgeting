@@ -17,26 +17,32 @@ const CATEGORY_LABELS = {
 
 function CustomTooltip({ active, payload }) {
   if (!active || !payload?.length) return null
+  const { name, value, payload: inner } = payload[0]
+  const pct = inner?.percent != null ? `${(inner.percent * 100).toFixed(1)}%` : null
   return (
-    <div className="bg-white border border-taupe/40 rounded-card shadow-card px-3 py-2 text-sm">
-      <p className="font-medium text-[#3D3530]">{payload[0].name}</p>
-      <p className="text-warmGray">{formatCurrency(payload[0].value)}/mo</p>
+    <div className="bg-white/95 backdrop-blur-sm border border-taupe/30 rounded-xl shadow-card-hover px-4 py-3 text-sm pointer-events-none">
+      <div className="flex items-center gap-2 mb-1">
+        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: inner?.fill }} />
+        <span className="font-semibold text-[#3D3530]">{name}</span>
+      </div>
+      <p className="text-warmGray pl-4">
+        {formatCurrency(value)}
+        {pct && <span className="ml-2 text-xs text-taupe-dark">({pct})</span>}
+      </p>
     </div>
   )
 }
 
 export default function ExpensePieChart({ expenses }) {
-  const active = expenses.filter((e) => e.isActive)
-  if (active.length === 0) {
+  if (!expenses.length) {
     return (
       <div className="flex items-center justify-center h-40 text-warmGray text-sm">
-        No active expenses
+        No expenses this month
       </div>
     )
   }
 
-  // Group by category
-  const grouped = active.reduce((acc, e) => {
+  const grouped = expenses.reduce((acc, e) => {
     const cat = CATEGORY_LABELS[e.category] ?? e.category ?? 'Other'
     acc[cat] = (acc[cat] || 0) + e.amount
     return acc
@@ -59,7 +65,7 @@ export default function ExpensePieChart({ expenses }) {
             <Cell key={i} fill={COLORS[i % COLORS.length]} stroke="white" strokeWidth={2} />
           ))}
         </Pie>
-        <Tooltip content={<CustomTooltip />} />
+        <Tooltip content={<CustomTooltip />} wrapperStyle={{ outline: 'none' }} />
         <Legend
           formatter={(value) => <span style={{ fontSize: 11, color: '#9B9189' }}>{value}</span>}
           iconType="circle"

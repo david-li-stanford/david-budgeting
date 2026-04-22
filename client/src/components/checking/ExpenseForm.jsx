@@ -22,7 +22,6 @@ export default function ExpenseForm({ expense, onSave, onClose }) {
     category: expense?.category || 'other',
     dueDay: expense?.dueDay ? String(expense.dueDay) : '',
     notes: expense?.notes || '',
-    isActive: expense?.isActive ?? true,
   })
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
@@ -48,7 +47,7 @@ export default function ExpenseForm({ expense, onSave, onClose }) {
           placeholder="e.g. Rent"
         />
         <Input
-          label="Monthly Amount"
+          label="Amount"
           prefix="$"
           type="number"
           step="0.01"
@@ -84,16 +83,6 @@ export default function ExpenseForm({ expense, onSave, onClose }) {
           onChange={(e) => set('notes', e.target.value)}
           placeholder="Any notes..."
         />
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => set('isActive', !form.isActive)}
-            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${form.isActive ? 'bg-sage' : 'bg-taupe'}`}
-          >
-            <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform shadow-sm ${form.isActive ? 'translate-x-5' : 'translate-x-1'}`} />
-          </button>
-          <span className="text-sm text-warmGray">Active</span>
-        </div>
         <div className="flex gap-2 pt-2">
           <Button type="submit" variant="primary">
             {expense ? 'Save Changes' : 'Add Expense'}
