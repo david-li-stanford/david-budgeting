@@ -136,3 +136,8 @@ export const createDeposit = async (deposit) => {
   check(error)
   return data
 }
+
+export const deleteDeposit = async (id) => {
+  const { error } = await supabase.from('depositHistory').delete().eq('id', id)
+  check(error)
+}

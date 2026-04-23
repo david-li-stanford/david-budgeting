@@ -14,7 +14,7 @@ export default function Dashboard() {
   const { accounts: checking, loading: l1, updateAccount: updateChecking } = useCheckingAccounts()
   const { accounts: investment, loading: l2, updateAccount: updateInvestment } = useInvestmentAccounts()
   const { settings, loading: l3, updateSettings } = useSettings()
-  const { deposits, loading: l4, addDeposit } = useDepositHistory()
+  const { deposits, loading: l4, addDeposit, removeDeposit } = useDepositHistory()
 
   if (l1 || l2 || l3 || l4) {
     return (
@@ -60,6 +60,21 @@ export default function Dashboard() {
   const handleOneTimeDeposit = (amount, distribution, note) =>
     applyDeposit(amount, distribution, 'one-time', note)
 
+  const handleUndoDeposit = async (deposit) => {
+    const { allocations: allocs } = calculateDistribution(deposit.amount, deposit.distribution || [])
+    await Promise.all(
+      Object.entries(allocs).map(([accountId, allocated]) => {
+        if (allocated <= 0) return Promise.resolve()
+        const chk = checking.find((a) => a.id === accountId)
+        if (chk) return updateChecking(accountId, { balance: chk.balance - allocated })
+        const inv = investment.find((a) => a.id === accountId)
+        if (inv) return updateInvestment(accountId, { balance: inv.balance - allocated })
+        return Promise.resolve()
+      })
+    )
+    await removeDeposit(deposit.id)
+  }
+
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8">
       {/* Header */}
@@ -99,6 +114,7 @@ export default function Dashboard() {
           allAccounts={allAccounts}
           defaultDistribution={settings?.distribution || []}
           onDeposit={handleOneTimeDeposit}
+          onUndo={handleUndoDeposit}
         />
       </div>
 

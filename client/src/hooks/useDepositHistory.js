@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { getDepositHistory, createDeposit } from '../api/client'
+import { getDepositHistory, createDeposit, deleteDeposit } from '../api/client'
 
 export function useDepositHistory() {
   const [deposits, setDeposits] = useState([])
@@ -29,5 +29,10 @@ export function useDepositHistory() {
     return created
   }
 
-  return { deposits, loading, error, addDeposit, refetch }
+  const removeDeposit = async (id) => {
+    await deleteDeposit(id)
+    setDeposits((prev) => prev.filter((d) => d.id !== id))
+  }
+
+  return { deposits, loading, error, addDeposit, removeDeposit, refetch }
 }

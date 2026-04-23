@@ -41,23 +41,10 @@ function DepositModal({ allAccounts, defaultDistribution, onSubmit, onClose }) {
     <Modal title="One-Time Deposit" onClose={onClose} size="lg">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
-          <Input
-            label="Amount"
-            prefix="$"
-            type="number"
-            step="0.01"
-            min="0.01"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            required
-            placeholder="0.00"
-          />
-          <Input
-            label="Note (optional)"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="e.g. Bonus, tax refund…"
-          />
+          <Input label="Amount" prefix="$" type="number" step="0.01" min="0.01" value={amount}
+            onChange={(e) => setAmount(e.target.value)} required placeholder="0.00" />
+          <Input label="Note (optional)" value={note} onChange={(e) => setNote(e.target.value)}
+            placeholder="e.g. Bonus, tax refund…" />
         </div>
 
         {rows.length > 0 && (
@@ -73,23 +60,15 @@ function DepositModal({ allAccounts, defaultDistribution, onSubmit, onClose }) {
               {rows.map((row) => (
                 <div key={row.accountId} className="grid grid-cols-[1fr_90px_90px_80px] gap-2 items-center bg-cream rounded-btn px-3 py-2">
                   <span className="text-sm font-medium text-[#3D3530] truncate">{row.name}</span>
-                  <select
-                    className="input-field text-xs py-1"
-                    value={row.mode}
-                    onChange={(e) => setRow(row.accountId, 'mode', e.target.value)}
-                  >
+                  <select className="input-field text-xs py-1" value={row.mode}
+                    onChange={(e) => setRow(row.accountId, 'mode', e.target.value)}>
                     <option value="percent">%</option>
                     <option value="fixed">$</option>
                   </select>
                   <div className="relative">
-                    <input
-                      type="number"
-                      min="0"
-                      step={row.mode === 'percent' ? '1' : '0.01'}
-                      className="input-field text-xs py-1 pr-6"
-                      value={row.value}
-                      onChange={(e) => setRow(row.accountId, 'value', e.target.value)}
-                    />
+                    <input type="number" min="0" step={row.mode === 'percent' ? '1' : '0.01'}
+                      className="input-field text-xs py-1 pr-6" value={row.value}
+                      onChange={(e) => setRow(row.accountId, 'value', e.target.value)} />
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-warmGray pointer-events-none">
                       {row.mode === 'percent' ? '%' : '$'}
                     </span>
@@ -100,7 +79,6 @@ function DepositModal({ allAccounts, defaultDistribution, onSubmit, onClose }) {
                 </div>
               ))}
             </div>
-
             <div className="flex items-center justify-between py-2 px-3 bg-cream-dark rounded-btn mt-2 text-sm">
               <span className="text-warmGray">Unallocated</span>
               <span className={`font-semibold tabular-nums ${unallocated > 0 ? 'text-amber' : 'text-[#3D3530]'}`}>
@@ -125,39 +103,66 @@ function DepositModal({ allAccounts, defaultDistribution, onSubmit, onClose }) {
   )
 }
 
-export default function OneTimeDepositSection({ deposits, allAccounts, defaultDistribution, onDeposit }) {
+const TYPE_LABELS = { recurring: 'Recurring', 'one-time': 'One-time' }
+const TYPE_COLORS = { recurring: 'bg-sage/15 text-sage', 'one-time': 'bg-amber/15 text-amber' }
+
+export default function OneTimeDepositSection({ deposits, allAccounts, defaultDistribution, onDeposit, onUndo }) {
   const [showModal, setShowModal] = useState(false)
+  const [confirmUndo, setConfirmUndo] = useState(null)
+  const [undoing, setUndoing] = useState(null)
+
+  const handleUndo = async (deposit) => {
+    setUndoing(deposit.id)
+    await onUndo(deposit)
+    setConfirmUndo(null)
+    setUndoing(null)
+  }
 
   return (
     <Card>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-[#3D3530]">One-Time Deposits</h3>
+        <h3 className="font-semibold text-[#3D3530]">Deposit History</h3>
         <Button variant="primary" size="sm" onClick={() => setShowModal(true)}>
-          + New Deposit
+          + One-Time Deposit
         </Button>
       </div>
 
       {deposits.length === 0 ? (
-        <p className="text-sm text-warmGray py-4 text-center">No one-time deposits yet.</p>
+        <p className="text-sm text-warmGray py-4 text-center">No deposits yet.</p>
       ) : (
         <div className="rounded-card border border-taupe/40 overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-cream-dark border-b border-taupe/40">
                 <th className="text-left px-4 py-2.5 text-xs font-semibold text-warmGray uppercase tracking-wider">Date</th>
+                <th className="text-left px-4 py-2.5 text-xs font-semibold text-warmGray uppercase tracking-wider">Type</th>
                 <th className="text-left px-4 py-2.5 text-xs font-semibold text-warmGray uppercase tracking-wider">Note</th>
                 <th className="text-right px-4 py-2.5 text-xs font-semibold text-warmGray uppercase tracking-wider">Amount</th>
+                <th className="px-4 py-2.5"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-taupe/20">
-              {deposits.filter((d) => d.type === 'one-time').map((d) => (
+              {deposits.map((d) => (
                 <tr key={d.id} className="hover:bg-cream transition-colors">
-                  <td className="px-4 py-3 text-xs text-warmGray">
+                  <td className="px-4 py-3 text-xs text-warmGray whitespace-nowrap">
                     {new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </td>
-                  <td className="px-4 py-3 text-[#3D3530]">{d.note || <span className="text-warmGray/50">—</span>}</td>
-                  <td className="px-4 py-3 text-right font-semibold text-sage tabular-nums">
+                  <td className="px-4 py-3">
+                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${TYPE_COLORS[d.type] ?? 'bg-taupe text-warmGray'}`}>
+                      {TYPE_LABELS[d.type] ?? d.type}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-[#3D3530]">{d.note || <span className="text-warmGray/40">—</span>}</td>
+                  <td className="px-4 py-3 text-right font-semibold text-sage tabular-nums whitespace-nowrap">
                     +{formatCurrency(d.amount)}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      onClick={() => setConfirmUndo(d)}
+                      className="btn-ghost text-xs px-2 py-1 text-warmGray hover:text-danger"
+                    >
+                      Undo
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -173,6 +178,32 @@ export default function OneTimeDepositSection({ deposits, allAccounts, defaultDi
           onSubmit={onDeposit}
           onClose={() => setShowModal(false)}
         />
+      )}
+
+      {confirmUndo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#3D3530]/30 backdrop-blur-sm">
+          <div className="bg-white rounded-card shadow-modal p-6 max-w-sm w-full">
+            <h3 className="font-semibold text-[#3D3530] mb-2">Undo deposit?</h3>
+            <p className="text-sm text-warmGray mb-1">
+              {TYPE_LABELS[confirmUndo.type]} deposit of{' '}
+              <span className="font-medium text-[#3D3530]">{formatCurrency(confirmUndo.amount)}</span>
+              {confirmUndo.note ? ` — "${confirmUndo.note}"` : ''}
+            </p>
+            <p className="text-sm text-warmGray mb-5">
+              This will subtract the allocated amounts from each account's balance.
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="danger"
+                disabled={undoing === confirmUndo.id}
+                onClick={() => handleUndo(confirmUndo)}
+              >
+                {undoing === confirmUndo.id ? 'Undoing…' : 'Undo Deposit'}
+              </Button>
+              <Button variant="secondary" onClick={() => setConfirmUndo(null)}>Cancel</Button>
+            </div>
+          </div>
+        </div>
       )}
     </Card>
   )
