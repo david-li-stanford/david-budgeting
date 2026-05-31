@@ -1,4 +1,5 @@
 import { useCheckingAccounts, useInvestmentAccounts } from '../hooks/useAccounts'
+import { useCreditAccounts } from '../hooks/useCreditAccounts'
 import { useSettings } from '../hooks/useSettings'
 import { useDepositHistory } from '../hooks/useDepositHistory'
 import { useTransfers } from '../hooks/useTransfers'
@@ -9,17 +10,19 @@ import MiniAccountCard from '../components/dashboard/MiniAccountCard'
 import RecurringIncomeCard from '../components/dashboard/RecurringIncomeCard'
 import OneTimeDepositSection from '../components/dashboard/OneTimeDepositSection'
 import TransferSection from '../components/dashboard/TransferSection'
+import SyncButton from '../components/dashboard/SyncButton'
 import Card from '../components/ui/Card'
 import Spinner from '../components/ui/Spinner'
 
 export default function Dashboard() {
-  const { accounts: checking, loading: l1, updateAccount: updateChecking } = useCheckingAccounts()
-  const { accounts: investment, loading: l2, updateAccount: updateInvestment } = useInvestmentAccounts()
+  const { accounts: checking, loading: l1, updateAccount: updateChecking, refetch: refetchChecking } = useCheckingAccounts()
+  const { accounts: investment, loading: l2, updateAccount: updateInvestment, refetch: refetchInvestment } = useInvestmentAccounts()
+  const { accounts: credit, loading: l6, refetch: refetchCredit } = useCreditAccounts()
   const { settings, loading: l3, updateSettings } = useSettings()
   const { deposits, loading: l4, addDeposit, removeDeposit } = useDepositHistory()
   const { transfers, loading: l5, addTransfer, removeTransfer } = useTransfers()
 
-  if (l1 || l2 || l3 || l4 || l5) {
+  if (l1 || l2 || l3 || l4 || l5 || l6) {
     return (
       <div className="flex items-center justify-center h-full p-20">
         <Spinner size="lg" />
@@ -32,7 +35,15 @@ export default function Dashboard() {
     ...investment.map((a) => ({ ...a, _type: 'investment' })),
   ]
 
-  const totalNetWorth = allAccounts.reduce((s, a) => s + (a.balance || 0), 0)
+  const totalAssets = allAccounts.reduce((s, a) => s + (a.balance || 0), 0)
+  const totalLiabilities = credit.reduce((s, a) => s + (a.balance || 0), 0)
+  const totalNetWorth = totalAssets - totalLiabilities
+
+  const handleSynced = () => {
+    refetchChecking()
+    refetchInvestment()
+    refetchCredit()
+  }
 
   const { allocations } = calculateDistribution(
     settings?.monthlyIncome || 0,
@@ -105,9 +116,12 @@ export default function Dashboard() {
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="page-title">Dashboard</h1>
-        <p className="text-warmGray text-sm mt-1">Your complete financial overview</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="page-title">Dashboard</h1>
+          <p className="text-warmGray text-sm mt-1">Your complete financial overview</p>
+        </div>
+        <SyncButton onSynced={handleSynced} />
       </div>
 
       {/* Net Worth + Donut */}
@@ -117,8 +131,11 @@ export default function Dashboard() {
           <p className="text-4xl font-semibold text-[#3D3530] tabular-nums mb-1">
             {formatCurrency(totalNetWorth)}
           </p>
-          <p className="text-xs text-warmGray">
-            across {allAccounts.length} account{allAccounts.length !== 1 ? 's' : ''}
+          {totalLiabilities > 0 && (
+            <p className="text-xs text-danger mt-0.5">{formatCurrency(totalLiabilities)} in liabilities</p>
+          )}
+          <p className="text-xs text-warmGray mt-1">
+            across {allAccounts.length + credit.length} account{allAccounts.length + credit.length !== 1 ? 's' : ''}
           </p>
         </Card>
         <Card className="lg:col-span-2">
@@ -189,7 +206,23 @@ export default function Dashboard() {
         </div>
       )}
 
-      {allAccounts.length === 0 && (
+      {credit.length > 0 && (
+        <div>
+          <h2 className="section-title mb-3">Credit Cards</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {credit.map((a) => (
+              <MiniAccountCard
+                key={a.id}
+                account={a}
+                type="credit"
+                allocatedIncome={0}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {allAccounts.length === 0 && credit.length === 0 && (
         <Card className="text-center py-12">
           <p className="text-warmGray text-sm">No accounts yet. Use the sidebar to add your first account.</p>
         </Card>

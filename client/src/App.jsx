@@ -4,6 +4,8 @@ import AppShell from './components/layout/AppShell'
 import Dashboard from './pages/Dashboard'
 import CheckingAccountPage from './pages/CheckingAccountPage'
 import InvestmentAccountPage from './pages/InvestmentAccountPage'
+import CreditAccountPage from './pages/CreditAccountPage'
+import ConnectPage from './pages/ConnectPage'
 import Login from './pages/Login'
 import Spinner from './components/ui/Spinner'
 
@@ -30,6 +32,8 @@ export default function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/checking/:accountId" element={<CheckingAccountPage />} />
             <Route path="/investment/:accountId" element={<InvestmentAccountPage />} />
+            <Route path="/credit/:accountId" element={<CreditAccountPage />} />
+            <Route path="/connect" element={<ConnectPage />} />
           </Route>
         </Routes>
       </AuthGuard>

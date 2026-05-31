@@ -162,3 +162,64 @@ export const deleteTransfer = async (id) => {
   const { error } = await supabase.from('transfers').delete().eq('id', id)
   check(error)
 }
+
+// Credit Accounts
+export const getCreditAccounts = async () => {
+  const { data, error } = await supabase.from('creditAccounts').select('*')
+  check(error); return data
+}
+export const createCreditAccount = async (account) => {
+  const { data, error } = await supabase.from('creditAccounts').insert(account).select().single()
+  check(error); return data
+}
+export const patchCreditAccount = async (id, updates) => {
+  const { data, error } = await supabase.from('creditAccounts').update(updates).eq('id', id).select().single()
+  check(error); return data
+}
+export const deleteCreditAccount = async (id) => {
+  const { error } = await supabase.from('creditAccounts').delete().eq('id', id)
+  check(error)
+}
+
+// Teller Enrollments
+export const getTellerEnrollments = async () => {
+  const { data, error } = await supabase.from('teller_enrollments').select('*').order('created_at', { ascending: true })
+  check(error); return data
+}
+export const createTellerEnrollment = async (enrollment) => {
+  const { data, error } = await supabase.from('teller_enrollments').insert(enrollment).select().single()
+  check(error); return data
+}
+export const patchTellerEnrollment = async (id, updates) => {
+  const { data, error } = await supabase.from('teller_enrollments').update(updates).eq('id', id).select().single()
+  check(error); return data
+}
+export const deleteTellerEnrollment = async (id) => {
+  const { error } = await supabase.from('teller_enrollments').delete().eq('id', id)
+  check(error)
+}
+
+// Teller Transactions
+export const getTellerTransactions = async (appAccountId) => {
+  const { data, error } = await supabase
+    .from('teller_transactions')
+    .select('*')
+    .eq('app_account_id', appAccountId)
+    .order('date', { ascending: false })
+  check(error); return data
+}
+
+// Edge Function calls
+export const discoverTellerAccounts = async (accessToken) => {
+  const { data, error } = await supabase.functions.invoke('discover-teller', {
+    body: { access_token: accessToken },
+  })
+  if (error) throw new Error(error.message)
+  return data
+}
+
+export const syncTeller = async () => {
+  const { data, error } = await supabase.functions.invoke('sync-teller')
+  if (error) throw new Error(error.message)
+  return data
+}

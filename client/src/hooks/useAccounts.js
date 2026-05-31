@@ -4,7 +4,7 @@ import {
   getInvestmentAccounts, createInvestmentAccount, patchInvestmentAccount, deleteInvestmentAccount,
 } from '../api/client'
 
-function makeAccountHook(getAll, create, patch, remove) {
+export function makeAccountHook(getAll, create, patch, remove) {
   return function useAccountHook() {
     const [accounts, setAccounts] = useState([])
     const [loading, setLoading] = useState(true)

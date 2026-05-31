@@ -2,8 +2,8 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import clsx from 'clsx'
-import { useCheckingAccounts } from '../../hooks/useAccounts'
-import { useInvestmentAccounts } from '../../hooks/useAccounts'
+import { useCheckingAccounts, useInvestmentAccounts } from '../../hooks/useAccounts'
+import { useCreditAccounts } from '../../hooks/useCreditAccounts'
 import Modal from '../ui/Modal'
 import Input from '../ui/Input'
 import Button from '../ui/Button'
@@ -87,6 +87,7 @@ export default function Sidebar() {
   const { signOut } = useAuth()
   const { accounts: checking, addAccount: addChecking } = useCheckingAccounts()
   const { accounts: investment, addAccount: addInvestment } = useInvestmentAccounts()
+  const { accounts: credit } = useCreditAccounts()
   const [modal, setModal] = useState(null) // 'checking' | 'investment' | null
 
   const handleAdd = async (type, data) => {
@@ -163,6 +164,34 @@ export default function Sidebar() {
             </div>
           </div>
 
+          {/* Credit Cards */}
+          {credit.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between px-2 mb-1">
+                <span className="section-title text-[10px]">Credit Cards</span>
+              </div>
+              <div className="space-y-0.5">
+                {credit.map((a) => (
+                  <NavLink
+                    key={a.id}
+                    to={`/credit/${a.id}`}
+                    className={({ isActive }) =>
+                      clsx(
+                        'flex items-center justify-between px-3 py-2 rounded-btn text-sm transition-colors duration-150',
+                        isActive
+                          ? 'bg-terracotta/10 text-terracotta font-medium'
+                          : 'text-warmGray hover:text-[#3D3530] hover:bg-cream-dark'
+                      )
+                    }
+                  >
+                    <span className="truncate">{a.name}</span>
+                    <span className="text-xs shrink-0 ml-2 text-danger opacity-80">{formatCurrency(a.balance).replace('$', '$').split('.')[0]}</span>
+                  </NavLink>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Investment Accounts */}
           <div>
             <div className="flex items-center justify-between px-2 mb-1">
@@ -199,6 +228,16 @@ export default function Sidebar() {
                 <p className="px-3 py-1 text-xs text-warmGray/60 italic">No accounts yet</p>
               )}
             </div>
+          </div>
+
+          {/* Connect */}
+          <div>
+            <NavItem to="/connect">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              </svg>
+              Connect Accounts
+            </NavItem>
           </div>
         </nav>
 

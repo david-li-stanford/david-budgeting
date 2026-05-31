@@ -6,6 +6,7 @@ const typeStyles = {
   retirement: 'bg-terracotta/15 text-terracotta',
   cd:         'bg-taupe text-warmGray',
   checking:   'bg-blue-50 text-blue-500',
+  credit:     'bg-danger/10 text-danger',
 }
 
 const typeLabels = {
@@ -14,6 +15,7 @@ const typeLabels = {
   retirement: 'Retirement',
   cd:         'CD',
   checking:   'Checking',
+  credit:     'Credit',
 }
 
 export default function Badge({ type, className }) {

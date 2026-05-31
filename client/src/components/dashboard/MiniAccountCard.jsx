@@ -4,7 +4,9 @@ import { formatCurrency } from '../../utils/formatCurrency'
 
 export default function MiniAccountCard({ account, type, allocatedIncome }) {
   const navigate = useNavigate()
-  const route = type === 'checking' ? `/checking/${account.id}` : `/investment/${account.id}`
+  const route = type === 'checking' ? `/checking/${account.id}`
+    : type === 'credit' ? `/credit/${account.id}`
+    : `/investment/${account.id}`
 
   return (
     <div
@@ -18,10 +20,10 @@ export default function MiniAccountCard({ account, type, allocatedIncome }) {
             <p className="text-xs text-warmGray mt-0.5">{account.institution}</p>
           )}
         </div>
-        <Badge type={type === 'checking' ? 'checking' : account.accountType} className="shrink-0 ml-2" />
+        <Badge type={type === 'checking' ? 'checking' : type === 'credit' ? 'credit' : account.accountType} className="shrink-0 ml-2" />
       </div>
-      <p className="text-2xl font-semibold text-[#3D3530] tabular-nums">
-        {formatCurrency(account.balance)}
+      <p className={`text-2xl font-semibold tabular-nums ${type === 'credit' ? 'text-danger' : 'text-[#3D3530]'}`}>
+        {type === 'credit' ? '-' : ''}{formatCurrency(account.balance)}
       </p>
       {allocatedIncome > 0 && (
         <p className="text-xs text-sage mt-1.5 font-medium">
