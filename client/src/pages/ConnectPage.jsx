@@ -27,7 +27,7 @@ function AddTokenModal({ onClose, onDiscover }) {
     setError(null)
     try {
       const accounts = await discoverTellerAccounts(token.trim())
-      if (!Array.isArray(accounts)) throw new Error(accounts.error ?? 'Discovery failed')
+      if (!Array.isArray(accounts)) throw new Error(typeof accounts?.error === 'string' ? accounts.error : JSON.stringify(accounts))
       onDiscover(token.trim(), accounts)
       onClose()
     } catch (e) {

@@ -214,7 +214,8 @@ export const discoverTellerAccounts = async (accessToken) => {
   const { data, error } = await supabase.functions.invoke('discover-teller', {
     body: { access_token: accessToken },
   })
-  if (error) throw new Error(error.message)
+  if (error) throw new Error(typeof error.message === 'string' ? error.message : JSON.stringify(error))
+  if (data?.error) throw new Error(typeof data.error === 'string' ? data.error : JSON.stringify(data.error))
   return data
 }
 
