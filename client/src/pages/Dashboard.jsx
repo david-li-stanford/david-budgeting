@@ -1,12 +1,14 @@
 import { useCheckingAccounts, useInvestmentAccounts } from '../hooks/useAccounts'
 import { useSettings } from '../hooks/useSettings'
 import { useDepositHistory } from '../hooks/useDepositHistory'
+import { useTransfers } from '../hooks/useTransfers'
 import { calculateDistribution } from '../utils/distribution'
 import { formatCurrency } from '../utils/formatCurrency'
 import NetWorthDonut from '../components/charts/NetWorthDonut'
 import MiniAccountCard from '../components/dashboard/MiniAccountCard'
 import RecurringIncomeCard from '../components/dashboard/RecurringIncomeCard'
 import OneTimeDepositSection from '../components/dashboard/OneTimeDepositSection'
+import TransferSection from '../components/dashboard/TransferSection'
 import Card from '../components/ui/Card'
 import Spinner from '../components/ui/Spinner'
 
@@ -15,8 +17,9 @@ export default function Dashboard() {
   const { accounts: investment, loading: l2, updateAccount: updateInvestment } = useInvestmentAccounts()
   const { settings, loading: l3, updateSettings } = useSettings()
   const { deposits, loading: l4, addDeposit, removeDeposit } = useDepositHistory()
+  const { transfers, loading: l5, addTransfer, removeTransfer } = useTransfers()
 
-  if (l1 || l2 || l3 || l4) {
+  if (l1 || l2 || l3 || l4 || l5) {
     return (
       <div className="flex items-center justify-center h-full p-20">
         <Spinner size="lg" />
@@ -59,6 +62,30 @@ export default function Dashboard() {
 
   const handleOneTimeDeposit = (amount, distribution, note) =>
     applyDeposit(amount, distribution, 'one-time', note)
+
+  const handleTransfer = async ({ fromAccountId, fromAccountType, toAccountId, toAccountType, amount, note }) => {
+    const fromChk = checking.find((a) => a.id === fromAccountId)
+    const fromInv = investment.find((a) => a.id === fromAccountId)
+    const toChk = checking.find((a) => a.id === toAccountId)
+    const toInv = investment.find((a) => a.id === toAccountId)
+    if (fromChk) await updateChecking(fromAccountId, { balance: fromChk.balance - amount })
+    if (fromInv) await updateInvestment(fromAccountId, { balance: fromInv.balance - amount })
+    if (toChk) await updateChecking(toAccountId, { balance: toChk.balance + amount })
+    if (toInv) await updateInvestment(toAccountId, { balance: toInv.balance + amount })
+    await addTransfer({ fromAccountId, fromAccountType, toAccountId, toAccountType, amount, note })
+  }
+
+  const handleUndoTransfer = async (transfer) => {
+    const fromChk = checking.find((a) => a.id === transfer.fromAccountId)
+    const fromInv = investment.find((a) => a.id === transfer.fromAccountId)
+    const toChk = checking.find((a) => a.id === transfer.toAccountId)
+    const toInv = investment.find((a) => a.id === transfer.toAccountId)
+    if (fromChk) await updateChecking(transfer.fromAccountId, { balance: fromChk.balance + transfer.amount })
+    if (fromInv) await updateInvestment(transfer.fromAccountId, { balance: fromInv.balance + transfer.amount })
+    if (toChk) await updateChecking(transfer.toAccountId, { balance: toChk.balance - transfer.amount })
+    if (toInv) await updateInvestment(transfer.toAccountId, { balance: toInv.balance - transfer.amount })
+    await removeTransfer(transfer.id)
+  }
 
   const handleUndoDeposit = async (deposit) => {
     const { allocations: allocs } = calculateDistribution(deposit.amount, deposit.distribution || [])
@@ -115,6 +142,17 @@ export default function Dashboard() {
           defaultDistribution={settings?.distribution || []}
           onDeposit={handleOneTimeDeposit}
           onUndo={handleUndoDeposit}
+        />
+      </div>
+
+      {/* Transfers */}
+      <div className="space-y-5">
+        <h2 className="section-title">Transfers</h2>
+        <TransferSection
+          transfers={transfers}
+          allAccounts={allAccounts}
+          onTransfer={handleTransfer}
+          onUndo={handleUndoTransfer}
         />
       </div>
 
