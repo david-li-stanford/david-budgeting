@@ -13,10 +13,8 @@
     "@headlessui/react": "^2.2.10",
     "@supabase/supabase-js": "^2.104.0",
     "clsx": "^2.1.1",
-    "plaid": "^29.0.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "react-plaid-link": "^3.6.1",
     "react-router-dom": "^7.14.2",
     "recharts": "^3.8.1"
   },

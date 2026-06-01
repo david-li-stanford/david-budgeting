@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, Fragment } from 'react'
-import { usePlaidLink } from 'react-plaid-link'
 import { usePlaidAccounts } from '../hooks/usePlaidAccounts'
 import { useCheckingAccounts, useInvestmentAccounts } from '../hooks/useAccounts'
 import { useCreditAccounts } from '../hooks/useCreditAccounts'
@@ -122,6 +121,15 @@ export default function ConnectPage() {
   const [removing, setRemoving] = useState(null)
   const [tokenError, setTokenError] = useState(null)
 
+  // Load Plaid Link script
+  useEffect(() => {
+    const script = document.createElement('script')
+    script.src = 'https://cdn.plaid.com/link/v2/stable/link-initialize.js'
+    script.async = true
+    document.body.appendChild(script)
+    return () => { if (document.body.contains(script)) document.body.removeChild(script) }
+  }, [])
+
   // Fetch link token on mount
   useEffect(() => {
     createPlaidLinkToken()
@@ -129,21 +137,21 @@ export default function ConnectPage() {
       .catch((e) => setTokenError(e.message))
   }, [])
 
-  const onSuccess = useCallback((publicToken, metadata) => {
-    setPendingExchange({
-      publicToken,
-      institution: metadata.institution,
-      accounts: metadata.accounts,
+  const open = useCallback(() => {
+    if (!linkToken || !window.Plaid) return
+    const handler = window.Plaid.create({
+      token: linkToken,
+      onSuccess: (publicToken, metadata) => {
+        setPendingExchange({
+          publicToken,
+          institution: metadata.institution,
+          accounts: metadata.accounts,
+        })
+      },
+      onExit: () => {},
     })
-  }, [])
-
-  const onExit = useCallback(() => {}, [])
-
-  const { open, ready } = usePlaidLink({
-    token: linkToken,
-    onSuccess,
-    onExit,
-  })
+    handler.open()
+  }, [linkToken])
 
   const handleSaveMappings = async (exchange, mappings) => {
     const accountsToSave = []
@@ -223,7 +231,7 @@ export default function ConnectPage() {
           variant="primary"
           size="sm"
           onClick={() => open()}
-          disabled={!ready || !linkToken}
+          disabled={!linkToken}
         >
           + Connect Bank
         </Button>
