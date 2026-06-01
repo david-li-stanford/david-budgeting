@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useTellerTransactions } from '../../hooks/useTellerTransactions'
+import { usePlaidTransactions } from '../../hooks/usePlaidTransactions'
 import { formatCurrency } from '../../utils/formatCurrency'
 import Spinner from '../ui/Spinner'
 
@@ -16,10 +16,10 @@ const CATEGORY_LABELS = {
 }
 
 export default function LinkedCreditCard({ account }) {
-  const { transactions, loading } = useTellerTransactions(account.id)
+  const { transactions, loading } = usePlaidTransactions(account.id)
   const [expanded, setExpanded] = useState(false)
 
-  const charges = transactions.filter((t) => t.amount < 0)
+  const charges = transactions.filter((t) => t.amount > 0)
   const visible = expanded ? transactions : transactions.slice(0, 5)
 
   return (
@@ -64,10 +64,10 @@ export default function LinkedCreditCard({ account }) {
                   <td className="px-4 py-2.5 text-xs text-warmGray whitespace-nowrap">
                     {new Date(tx.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </td>
-                  <td className="px-4 py-2.5 text-[#3D3530] font-medium max-w-[200px] truncate">{tx.description}</td>
+                  <td className="px-4 py-2.5 text-[#3D3530] font-medium max-w-[200px] truncate">{tx.name}</td>
                   <td className="px-4 py-2.5 text-xs text-warmGray">{CATEGORY_LABELS[tx.category] ?? tx.category ?? '—'}</td>
-                  <td className={`px-4 py-2.5 text-right font-semibold tabular-nums whitespace-nowrap ${tx.amount < 0 ? 'text-danger' : 'text-sage'}`}>
-                    {tx.amount < 0 ? '-' : '+'}{formatCurrency(Math.abs(tx.amount))}
+                  <td className={`px-4 py-2.5 text-right font-semibold tabular-nums whitespace-nowrap ${tx.amount > 0 ? 'text-danger' : 'text-sage'}`}>
+                    {tx.amount > 0 ? '-' : '+'}{formatCurrency(Math.abs(tx.amount))}
                   </td>
                 </tr>
               ))}

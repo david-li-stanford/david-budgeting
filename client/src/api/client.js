@@ -230,3 +230,57 @@ export const syncTeller = async () => {
   if (!res.ok) throw new Error(await res.text())
   return res.json()
 }
+
+// Plaid
+export const createPlaidLinkToken = async () => {
+  const res = await fetch('/api/plaid/create-link-token', { method: 'POST' })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error ?? 'Failed to create link token')
+  return data.link_token
+}
+
+export const exchangePlaidToken = async (publicToken, institution, accounts) => {
+  const { data: { session } } = await supabase.auth.getSession()
+  const res = await fetch('/api/plaid/exchange-token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+    body: JSON.stringify({ public_token: publicToken, institution, accounts }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error ?? 'Token exchange failed')
+  return data
+}
+
+export const syncPlaid = async () => {
+  const { data: { session } } = await supabase.auth.getSession()
+  const res = await fetch('/api/plaid/sync', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${session.access_token}` },
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
+}
+
+export const getPlaidAccounts = async () => {
+  const { data, error } = await supabase
+    .from('plaid_accounts')
+    .select('*, plaid_items(id, institution_name)')
+    .order('created_at', { ascending: true })
+  check(error)
+  return data
+}
+
+export const deletePlaidItem = async (id) => {
+  const { error } = await supabase.from('plaid_items').delete().eq('id', id)
+  check(error)
+}
+
+export const getPlaidTransactions = async (appAccountId) => {
+  const { data, error } = await supabase
+    .from('plaid_transactions')
+    .select('*')
+    .eq('app_account_id', appAccountId)
+    .order('date', { ascending: false })
+  check(error)
+  return data
+}

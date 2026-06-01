@@ -1,7 +1,6 @@
 import { useState } from 'react'
-import { syncTeller } from '../../api/client'
+import { syncPlaid } from '../../api/client'
 import Button from '../ui/Button'
-import { formatCurrency } from '../../utils/formatCurrency'
 
 export default function SyncButton({ onSynced }) {
   const [syncing, setSyncing] = useState(false)
@@ -14,7 +13,7 @@ export default function SyncButton({ onSynced }) {
     setError(null)
     setResults(null)
     try {
-      const res = await syncTeller()
+      const res = await syncPlaid()
       setResults(res.synced)
       setLastSynced(new Date())
       if (onSynced) onSynced()
@@ -57,11 +56,11 @@ export default function SyncButton({ onSynced }) {
       {error && <p className="text-xs text-danger">{error}</p>}
       {results && results.length > 0 && (
         <div className="text-xs text-warmGray space-y-0.5 text-right">
-          {results.map((r) => (
-            <p key={r.account}>
+          {results.map((r, i) => (
+            <p key={r.institution ?? i}>
               {r.error
-                ? <span className="text-danger">{r.account}: {r.error}</span>
-                : <span>{r.account} → {formatCurrency(r.balance)}</span>
+                ? <span className="text-danger">{r.institution}: {r.error}</span>
+                : <span>{r.institution} → {r.accounts?.length ?? 0} accounts synced, {r.transactions_added ?? 0} transactions</span>
               }
             </p>
           ))}

@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useCreditAccounts } from '../hooks/useCreditAccounts'
 import { useCheckingAccounts } from '../hooks/useAccounts'
-import { useTellerTransactions } from '../hooks/useTellerTransactions'
+import { usePlaidTransactions } from '../hooks/usePlaidTransactions'
 import { formatCurrency } from '../utils/formatCurrency'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
@@ -90,7 +90,7 @@ function EditAccountModal({ account, onSave, onClose, onDelete }) {
 export default function CreditAccountPage() {
   const { accountId } = useParams()
   const { accounts, loading: aLoading, updateAccount, removeAccount } = useCreditAccounts()
-  const { transactions, loading: tLoading } = useTellerTransactions(accountId)
+  const { transactions, loading: tLoading } = usePlaidTransactions(accountId)
   const [showEdit, setShowEdit] = useState(false)
 
   if (aLoading || tLoading) {
@@ -151,15 +151,15 @@ export default function CreditAccountPage() {
                     <td className="px-4 py-3 text-xs text-warmGray whitespace-nowrap">
                       {new Date(tx.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </td>
-                    <td className="px-4 py-3 text-[#3D3530] font-medium max-w-[200px] truncate">{tx.description}</td>
+                    <td className="px-4 py-3 text-[#3D3530] font-medium max-w-[200px] truncate">{tx.name}</td>
                     <td className="px-4 py-3 text-warmGray text-xs">{CATEGORY_LABELS[tx.category] ?? tx.category ?? '—'}</td>
                     <td className="px-4 py-3">
                       {tx.status === 'pending' && (
                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber/15 text-amber">Pending</span>
                       )}
                     </td>
-                    <td className={`px-4 py-3 text-right font-semibold tabular-nums whitespace-nowrap ${tx.amount < 0 ? 'text-danger' : 'text-sage'}`}>
-                      {tx.amount < 0 ? '-' : '+'}{formatCurrency(Math.abs(tx.amount))}
+                    <td className={`px-4 py-3 text-right font-semibold tabular-nums whitespace-nowrap ${tx.amount > 0 ? 'text-danger' : 'text-sage'}`}>
+                      {tx.amount > 0 ? '-' : '+'}{formatCurrency(Math.abs(tx.amount))}
                     </td>
                   </tr>
                 ))}
