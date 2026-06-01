@@ -2,11 +2,11 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useCheckingAccounts } from '../hooks/useAccounts'
 import { useCreditAccounts } from '../hooks/useCreditAccounts'
-import { useExpenses } from '../hooks/useExpenses'
+import { usePlaidTransactions } from '../hooks/usePlaidTransactions'
 import { useSettings } from '../hooks/useSettings'
 import { getAllocationForAccount } from '../utils/distribution'
 import { formatCurrency } from '../utils/formatCurrency'
-import ExpenseList from '../components/checking/ExpenseList'
+import TransactionList from '../components/checking/TransactionList'
 import LinkedCreditCard from '../components/checking/LinkedCreditCard'
 import CashFlowBarChart from '../components/charts/CashFlowBarChart'
 import ExpensePieChart from '../components/charts/ExpensePieChart'
@@ -49,11 +49,11 @@ export default function CheckingAccountPage() {
   const { accountId } = useParams()
   const { accounts, loading: aLoading, updateAccount, removeAccount } = useCheckingAccounts()
   const { accounts: allCreditAccounts, loading: cLoading } = useCreditAccounts()
-  const { expenses, loading: eLoading, addExpense, updateExpense, removeExpense } = useExpenses(accountId)
+  const { transactions, loading: tLoading } = usePlaidTransactions(accountId)
   const { settings } = useSettings()
   const [showEdit, setShowEdit] = useState(false)
 
-  if (aLoading || eLoading || cLoading) {
+  if (aLoading || tLoading || cLoading) {
     return <div className="flex items-center justify-center h-full p-20"><Spinner size="lg" /></div>
   }
 
@@ -65,31 +65,12 @@ export default function CheckingAccountPage() {
   const allocatedIncome = getAllocationForAccount(settings?.monthlyIncome || 0, settings?.distribution || [], accountId)
 
   const now = new Date()
-  const thisMonthExpenses = expenses.filter((e) => {
-    const d = new Date(e.createdAt)
+  const thisMonthTx = transactions.filter((t) => {
+    const d = new Date(t.date + 'T00:00:00')
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
   })
-  const totalThisMonth = thisMonthExpenses.reduce((s, e) => s + e.amount, 0)
+  const totalThisMonth = thisMonthTx.filter((t) => t.amount > 0).reduce((s, t) => s + t.amount, 0)
   const surplus = allocatedIncome - totalThisMonth
-
-  const handleAddExpense = async (data) => {
-    await addExpense(data)
-    await updateAccount(accountId, { balance: account.balance - (parseFloat(data.amount) || 0) })
-  }
-
-  const handleUpdateExpense = async (id, data) => {
-    const old = expenses.find((e) => e.id === id)
-    await updateExpense(id, data)
-    if (data.amount !== undefined && old) {
-      const diff = old.amount - (parseFloat(data.amount) || 0)
-      if (diff !== 0) await updateAccount(accountId, { balance: account.balance + diff })
-    }
-  }
-
-  const handleDeleteExpense = async (expense) => {
-    await removeExpense(expense.id)
-    await updateAccount(accountId, { balance: account.balance + expense.amount })
-  }
 
   return (
     <div className="p-8 max-w-5xl mx-auto space-y-6">
@@ -136,20 +117,15 @@ export default function CheckingAccountPage() {
         <Card>
           <p className="section-title mb-1">This Month's Breakdown</p>
           <p className="text-xs text-warmGray mb-4">By category</p>
-          <ExpensePieChart expenses={thisMonthExpenses} />
+          <ExpensePieChart expenses={thisMonthTx} />
         </Card>
       </div>
 
-      <MonthlyHistoryCard expenses={expenses} allocatedIncome={allocatedIncome} />
+      <MonthlyHistoryCard expenses={transactions} allocatedIncome={allocatedIncome} />
 
-      {/* Expense List */}
+      {/* Transaction History */}
       <Card>
-        <ExpenseList
-          expenses={expenses}
-          onAdd={handleAddExpense}
-          onUpdate={handleUpdateExpense}
-          onDelete={handleDeleteExpense}
-        />
+        <TransactionList transactions={transactions} />
       </Card>
 
       {/* Linked Credit Cards */}

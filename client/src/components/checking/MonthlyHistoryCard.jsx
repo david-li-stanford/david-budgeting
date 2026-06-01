@@ -15,8 +15,8 @@ function formatMonthLabel(key) {
 
 function buildMonthlyData(expenses, allocatedIncome) {
   const grouped = expenses.reduce((acc, e) => {
-    const key = getMonthKey(new Date(e.createdAt))
-    acc[key] = (acc[key] || 0) + e.amount
+    const key = getMonthKey(new Date(e.date + 'T00:00:00'))
+    if (e.amount > 0) acc[key] = (acc[key] || 0) + e.amount
     return acc
   }, {})
 

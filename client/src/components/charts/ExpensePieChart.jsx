@@ -4,15 +4,20 @@ import { formatCurrency } from '../../utils/formatCurrency'
 const COLORS = ['#C27B5A', '#7A8C6E', '#D4A843', '#9B9189', '#6B8CAE', '#B85C5C', '#C2A97E', '#8C7A6E']
 
 const CATEGORY_LABELS = {
-  housing: 'Housing',
-  food: 'Food',
-  utilities: 'Utilities',
-  insurance: 'Insurance',
-  subscriptions: 'Subscriptions',
-  transport: 'Transport',
-  health: 'Health',
-  entertainment: 'Entertainment',
-  other: 'Other',
+  FOOD_AND_DRINK: 'Food & Drink',
+  TRAVEL: 'Travel',
+  TRANSPORTATION: 'Transportation',
+  GENERAL_MERCHANDISE: 'Shopping',
+  ENTERTAINMENT: 'Entertainment',
+  PERSONAL_CARE: 'Personal Care',
+  GENERAL_SERVICES: 'Services',
+  GOVERNMENT_AND_NON_PROFIT: 'Government',
+  HOME_IMPROVEMENT: 'Home',
+  MEDICAL: 'Medical',
+  RENT_AND_UTILITIES: 'Utilities',
+  LOAN_PAYMENTS: 'Loans',
+  TRANSFER_OUT: 'Transfers',
+  INCOME: 'Income',
 }
 
 function CustomTooltip({ active, payload }) {
@@ -43,6 +48,7 @@ export default function ExpensePieChart({ expenses }) {
   }
 
   const grouped = expenses.reduce((acc, e) => {
+    if (e.amount <= 0) return acc
     const cat = CATEGORY_LABELS[e.category] ?? e.category ?? 'Other'
     acc[cat] = (acc[cat] || 0) + e.amount
     return acc
