@@ -142,26 +142,6 @@ export const deleteDeposit = async (id) => {
   check(error)
 }
 
-// Transfers
-export const getTransfers = async () => {
-  const { data, error } = await supabase
-    .from('transfers')
-    .select('*')
-    .order('date', { ascending: false })
-  check(error)
-  return data
-}
-
-export const createTransfer = async (transfer) => {
-  const { data, error } = await supabase.from('transfers').insert(transfer).select().single()
-  check(error)
-  return data
-}
-
-export const deleteTransfer = async (id) => {
-  const { error } = await supabase.from('transfers').delete().eq('id', id)
-  check(error)
-}
 
 // Credit Accounts
 export const getCreditAccounts = async () => {
