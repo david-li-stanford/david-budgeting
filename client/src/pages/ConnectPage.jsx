@@ -171,6 +171,7 @@ export default function ConnectPage() {
   const handleTellerConnect = () => {
     const connect = window.TellerConnect?.setup({
       applicationId: TELLER_APP_ID,
+      products: ['balance', 'transactions', 'identity'],
       onSuccess: async (enrollment) => {
         try {
           const accounts = await discoverTellerAccounts(enrollment.accessToken)
