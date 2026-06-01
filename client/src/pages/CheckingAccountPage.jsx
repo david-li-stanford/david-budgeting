@@ -3,8 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useCheckingAccounts } from '../hooks/useAccounts'
 import { useCreditAccounts } from '../hooks/useCreditAccounts'
 import { usePlaidTransactions } from '../hooks/usePlaidTransactions'
-import { useSettings } from '../hooks/useSettings'
-import { getAllocationForAccount } from '../utils/distribution'
 import { formatCurrency } from '../utils/formatCurrency'
 import TransactionList from '../components/checking/TransactionList'
 import LinkedCreditCard from '../components/checking/LinkedCreditCard'
@@ -50,7 +48,6 @@ export default function CheckingAccountPage() {
   const { accounts, loading: aLoading, updateAccount, removeAccount } = useCheckingAccounts()
   const { accounts: allCreditAccounts, loading: cLoading } = useCreditAccounts()
   const { transactions, loading: tLoading } = usePlaidTransactions(accountId)
-  const { settings } = useSettings()
   const [showEdit, setShowEdit] = useState(false)
 
   if (aLoading || tLoading || cLoading) {
@@ -62,15 +59,14 @@ export default function CheckingAccountPage() {
 
   const linkedCards = allCreditAccounts.filter((a) => a.checking_account_id === accountId)
 
-  const allocatedIncome = getAllocationForAccount(settings?.monthlyIncome || 0, settings?.distribution || [], accountId)
-
   const now = new Date()
   const thisMonthTx = transactions.filter((t) => {
     const d = new Date(t.date + 'T00:00:00')
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
   })
   const totalThisMonth = thisMonthTx.filter((t) => t.amount > 0).reduce((s, t) => s + t.amount, 0)
-  const surplus = allocatedIncome - totalThisMonth
+  const thisMonthIncome = thisMonthTx.filter((t) => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0)
+  const surplus = thisMonthIncome - totalThisMonth
 
   return (
     <div className="p-8 max-w-5xl mx-auto space-y-6">
@@ -92,9 +88,9 @@ export default function CheckingAccountPage() {
           <p className="text-3xl font-semibold text-[#3D3530] tabular-nums">{formatCurrency(account.balance)}</p>
         </Card>
         <Card className="text-center">
-          <p className="section-title mb-1">Allocated Income</p>
-          <p className="text-3xl font-semibold text-sage tabular-nums">{formatCurrency(allocatedIncome)}</p>
-          <p className="text-xs text-warmGray mt-1">per month</p>
+          <p className="section-title mb-1">Income</p>
+          <p className="text-3xl font-semibold text-sage tabular-nums">{formatCurrency(thisMonthIncome)}</p>
+          <p className="text-xs text-warmGray mt-1">this month</p>
         </Card>
         <Card className="text-center">
           <p className="section-title mb-1">{surplus >= 0 ? 'Surplus' : 'Deficit'}</p>
@@ -112,7 +108,7 @@ export default function CheckingAccountPage() {
           <p className="text-xs text-warmGray mb-4">
             {now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
           </p>
-          <CashFlowBarChart allocatedIncome={allocatedIncome} totalExpenses={totalThisMonth} />
+          <CashFlowBarChart income={thisMonthIncome} totalExpenses={totalThisMonth} />
         </Card>
         <Card>
           <p className="section-title mb-1">This Month's Breakdown</p>
@@ -121,7 +117,7 @@ export default function CheckingAccountPage() {
         </Card>
       </div>
 
-      <MonthlyHistoryCard expenses={transactions} allocatedIncome={allocatedIncome} />
+      <MonthlyHistoryCard expenses={transactions} />
 
       {/* Transaction History */}
       <Card>

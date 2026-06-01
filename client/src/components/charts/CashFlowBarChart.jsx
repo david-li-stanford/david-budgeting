@@ -11,11 +11,11 @@ function CustomTooltip({ active, payload }) {
   )
 }
 
-export default function CashFlowBarChart({ allocatedIncome, totalExpenses }) {
-  const surplus = allocatedIncome - totalExpenses
+export default function CashFlowBarChart({ income, totalExpenses }) {
+  const surplus = income - totalExpenses
   const data = [
-    { name: 'Allocated Income', value: allocatedIncome, color: '#7A8C6E' },
-    { name: 'Total Expenses', value: totalExpenses, color: '#C27B5A' },
+    { name: 'Income', value: income, color: '#7A8C6E' },
+    { name: 'Expenses', value: totalExpenses, color: '#C27B5A' },
     { name: surplus >= 0 ? 'Surplus' : 'Deficit', value: Math.abs(surplus), color: surplus >= 0 ? '#D4A843' : '#B85C5C' },
   ]
 

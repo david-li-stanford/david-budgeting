@@ -13,24 +13,31 @@ function formatMonthLabel(key) {
   return new Date(Number(year), Number(month) - 1).toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
 }
 
-function buildMonthlyData(expenses, allocatedIncome) {
-  const grouped = expenses.reduce((acc, e) => {
-    const key = getMonthKey(new Date(e.date + 'T00:00:00'))
-    if (e.amount > 0) acc[key] = (acc[key] || 0) + e.amount
-    return acc
-  }, {})
+function buildMonthlyData(transactions) {
+  const spent = {}
+  const income = {}
+
+  for (const t of transactions) {
+    const key = getMonthKey(new Date(t.date + 'T00:00:00'))
+    if (t.amount > 0) spent[key] = (spent[key] || 0) + t.amount
+    else income[key] = (income[key] || 0) + Math.abs(t.amount)
+  }
 
   const currentKey = getMonthKey(new Date())
-  if (!grouped[currentKey]) grouped[currentKey] = 0
+  const allKeys = new Set([...Object.keys(spent), ...Object.keys(income), currentKey])
 
-  return Object.entries(grouped)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, spent]) => ({
-      month: formatMonthLabel(key),
-      spent,
-      surplus: allocatedIncome - spent,
-      isCurrent: key === currentKey,
-    }))
+  return [...allKeys]
+    .sort()
+    .map((key) => {
+      const s = spent[key] || 0
+      const inc = income[key] || 0
+      return {
+        month: formatMonthLabel(key),
+        spent: s,
+        surplus: inc - s,
+        isCurrent: key === currentKey,
+      }
+    })
 }
 
 function ExpensesTooltip({ active, payload, label }) {
