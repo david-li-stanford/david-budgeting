@@ -1,13 +1,11 @@
 import { useCheckingAccounts, useInvestmentAccounts } from '../hooks/useAccounts'
 import { useCreditAccounts } from '../hooks/useCreditAccounts'
-import { useSettings } from '../hooks/useSettings'
 import { useDepositHistory } from '../hooks/useDepositHistory'
 import { calculateDistribution } from '../utils/distribution'
 import { formatCurrency } from '../utils/formatCurrency'
 import NetWorthDonut from '../components/charts/NetWorthDonut'
 import InvestmentForecast from '../components/dashboard/InvestmentForecast'
 import MiniAccountCard from '../components/dashboard/MiniAccountCard'
-import RecurringIncomeCard from '../components/dashboard/RecurringIncomeCard'
 import OneTimeDepositSection from '../components/dashboard/OneTimeDepositSection'
 import SyncButton from '../components/dashboard/SyncButton'
 import Card from '../components/ui/Card'
@@ -17,10 +15,9 @@ export default function Dashboard() {
   const { accounts: checking, loading: l1, updateAccount: updateChecking, refetch: refetchChecking } = useCheckingAccounts()
   const { accounts: investment, loading: l2, updateAccount: updateInvestment, refetch: refetchInvestment } = useInvestmentAccounts()
   const { accounts: credit, loading: l6, refetch: refetchCredit } = useCreditAccounts()
-  const { settings, loading: l3, updateSettings } = useSettings()
   const { deposits, loading: l4, addDeposit, removeDeposit } = useDepositHistory()
 
-  if (l1 || l2 || l3 || l4 || l6) {
+  if (l1 || l2 || l4 || l6) {
     return (
       <div className="flex items-center justify-center h-full p-20">
         <Spinner size="lg" />
@@ -43,17 +40,10 @@ export default function Dashboard() {
     refetchCredit()
   }
 
-  const { allocations } = calculateDistribution(
-    settings?.monthlyIncome || 0,
-    settings?.distribution || []
-  )
-
-  // Apply a deposit: calculate per-account allocations and update balances
-  const applyDeposit = async (amount, distribution, type, note = '') => {
-    const { allocations: allocs } = calculateDistribution(amount, distribution)
-
+  const applyDeposit = async (amount, distribution, note = '') => {
+    const { allocations } = calculateDistribution(amount, distribution)
     await Promise.all(
-      Object.entries(allocs).map(([accountId, allocated]) => {
+      Object.entries(allocations).map(([accountId, allocated]) => {
         if (allocated <= 0) return Promise.resolve()
         const chk = checking.find((a) => a.id === accountId)
         if (chk) return updateChecking(accountId, { balance: chk.balance + allocated })
@@ -62,20 +52,16 @@ export default function Dashboard() {
         return Promise.resolve()
       })
     )
-
-    await addDeposit({ amount, type, note, distribution })
+    await addDeposit({ amount, type: 'one-time', note, distribution })
   }
 
-  const handleRecurringDeposit = (amount, distribution) =>
-    applyDeposit(amount, distribution, 'recurring')
-
   const handleOneTimeDeposit = (amount, distribution, note) =>
-    applyDeposit(amount, distribution, 'one-time', note)
+    applyDeposit(amount, distribution, note)
 
   const handleUndoDeposit = async (deposit) => {
-    const { allocations: allocs } = calculateDistribution(deposit.amount, deposit.distribution || [])
+    const { allocations } = calculateDistribution(deposit.amount, deposit.distribution || [])
     await Promise.all(
-      Object.entries(allocs).map(([accountId, allocated]) => {
+      Object.entries(allocations).map(([accountId, allocated]) => {
         if (allocated <= 0) return Promise.resolve()
         const chk = checking.find((a) => a.id === accountId)
         if (chk) return updateChecking(accountId, { balance: chk.balance - allocated })
@@ -123,19 +109,13 @@ export default function Dashboard() {
         <InvestmentForecast totalInvestments={investment.reduce((s, a) => s + (a.balance || 0), 0)} />
       )}
 
-      {/* Income */}
+      {/* Deposits */}
       <div className="space-y-5">
-        <h2 className="section-title">Income</h2>
-        <RecurringIncomeCard
-          settings={settings}
-          allAccounts={allAccounts}
-          onSave={updateSettings}
-          onApplyDeposit={handleRecurringDeposit}
-        />
+        <h2 className="section-title">Deposits</h2>
         <OneTimeDepositSection
           deposits={deposits}
           allAccounts={allAccounts}
-          defaultDistribution={settings?.distribution || []}
+          defaultDistribution={[]}
           onDeposit={handleOneTimeDeposit}
           onUndo={handleUndoDeposit}
         />
@@ -147,12 +127,7 @@ export default function Dashboard() {
           <h2 className="section-title mb-3">Checking Accounts</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {checking.map((a) => (
-              <MiniAccountCard
-                key={a.id}
-                account={a}
-                type="checking"
-                allocatedIncome={allocations[a.id] || 0}
-              />
+              <MiniAccountCard key={a.id} account={a} type="checking" />
             ))}
           </div>
         </div>
@@ -163,12 +138,7 @@ export default function Dashboard() {
           <h2 className="section-title mb-3">Investment Accounts</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {investment.map((a) => (
-              <MiniAccountCard
-                key={a.id}
-                account={a}
-                type="investment"
-                allocatedIncome={allocations[a.id] || 0}
-              />
+              <MiniAccountCard key={a.id} account={a} type="investment" />
             ))}
           </div>
         </div>
@@ -179,12 +149,7 @@ export default function Dashboard() {
           <h2 className="section-title mb-3">Credit Cards</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {credit.map((a) => (
-              <MiniAccountCard
-                key={a.id}
-                account={a}
-                type="credit"
-                allocatedIncome={0}
-              />
+              <MiniAccountCard key={a.id} account={a} type="credit" />
             ))}
           </div>
         </div>
