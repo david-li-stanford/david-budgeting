@@ -181,55 +181,6 @@ export const deleteCreditAccount = async (id) => {
   check(error)
 }
 
-// Teller Enrollments
-export const getTellerEnrollments = async () => {
-  const { data, error } = await supabase.from('teller_enrollments').select('*').order('created_at', { ascending: true })
-  check(error); return data
-}
-export const createTellerEnrollment = async (enrollment) => {
-  const { data, error } = await supabase.from('teller_enrollments').insert(enrollment).select().single()
-  check(error); return data
-}
-export const patchTellerEnrollment = async (id, updates) => {
-  const { data, error } = await supabase.from('teller_enrollments').update(updates).eq('id', id).select().single()
-  check(error); return data
-}
-export const deleteTellerEnrollment = async (id) => {
-  const { error } = await supabase.from('teller_enrollments').delete().eq('id', id)
-  check(error)
-}
-
-// Teller Transactions
-export const getTellerTransactions = async (appAccountId) => {
-  const { data, error } = await supabase
-    .from('teller_transactions')
-    .select('*')
-    .eq('app_account_id', appAccountId)
-    .order('date', { ascending: false })
-  check(error); return data
-}
-
-// Edge Function calls
-export const discoverTellerAccounts = async (accessToken) => {
-  const res = await fetch('/api/discover', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ access_token: accessToken }),
-  })
-  const data = await res.json()
-  if (!res.ok) throw new Error(data.error ?? 'Discovery failed')
-  return data
-}
-
-export const syncTeller = async () => {
-  const { data: { session } } = await supabase.auth.getSession()
-  const res = await fetch('/api/sync', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${session.access_token}` },
-  })
-  if (!res.ok) throw new Error(await res.text())
-  return res.json()
-}
 
 // Plaid
 export const createPlaidLinkToken = async () => {
