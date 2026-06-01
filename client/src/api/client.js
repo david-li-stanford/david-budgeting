@@ -220,7 +220,11 @@ export const discoverTellerAccounts = async (accessToken) => {
 }
 
 export const syncTeller = async () => {
-  const { data, error } = await supabase.functions.invoke('sync-teller')
-  if (error) throw new Error(error.message)
-  return data
+  const { data: { session } } = await supabase.auth.getSession()
+  const res = await fetch('/api/sync', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${session.access_token}` },
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
 }

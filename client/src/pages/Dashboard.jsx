@@ -121,7 +121,7 @@ export default function Dashboard() {
           <h1 className="page-title">Dashboard</h1>
           <p className="text-warmGray text-sm mt-1">Your complete financial overview</p>
         </div>
-        <SyncButton onRefresh={handleSynced} />
+        <SyncButton onSynced={handleSynced} />
       </div>
 
       {/* Net Worth + Donut */}
