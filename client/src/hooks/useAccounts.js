@@ -24,8 +24,8 @@ export function makeAccountHook(getAll, create, patch, remove) {
     useEffect(() => { refetch() }, [refetch])
 
     const addAccount = async (data) => {
-      const id = crypto.randomUUID()
-      const created = await create({ ...data, id, createdAt: new Date().toISOString().split('T')[0] })
+      const id = data.id ?? crypto.randomUUID()
+      const created = await create({ ...data, id })
       setAccounts((prev) => [...prev, created])
       return created
     }
