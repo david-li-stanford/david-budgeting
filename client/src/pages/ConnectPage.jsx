@@ -25,15 +25,19 @@ function PlaidMappingModal({ pendingExchange, checkingAccounts, investmentAccoun
     )
   )
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
 
   const set = (accountId, patch) =>
     setMappings((prev) => ({ ...prev, [accountId]: { ...prev[accountId], ...patch } }))
 
   const handleSave = async () => {
     setSaving(true)
+    setError(null)
     try {
       await onSave(pendingExchange, mappings)
       onClose()
+    } catch (e) {
+      setError(e.message)
     } finally {
       setSaving(false)
     }
@@ -101,6 +105,7 @@ function PlaidMappingModal({ pendingExchange, checkingAccounts, investmentAccoun
             </div>
           )
         })}
+        {error && <p className="text-xs text-danger bg-danger/10 rounded-btn px-3 py-1.5">{error}</p>}
         <div className="flex gap-2 pt-1">
           <Button variant="primary" disabled={saving} onClick={handleSave}>{saving ? 'Saving…' : 'Save'}</Button>
           <Button variant="secondary" onClick={onClose}>Cancel</Button>
