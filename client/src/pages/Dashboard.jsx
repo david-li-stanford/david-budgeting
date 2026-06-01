@@ -5,6 +5,7 @@ import { useDepositHistory } from '../hooks/useDepositHistory'
 import { calculateDistribution } from '../utils/distribution'
 import { formatCurrency } from '../utils/formatCurrency'
 import NetWorthDonut from '../components/charts/NetWorthDonut'
+import InvestmentForecast from '../components/dashboard/InvestmentForecast'
 import MiniAccountCard from '../components/dashboard/MiniAccountCard'
 import RecurringIncomeCard from '../components/dashboard/RecurringIncomeCard'
 import OneTimeDepositSection from '../components/dashboard/OneTimeDepositSection'
@@ -116,6 +117,11 @@ export default function Dashboard() {
           <NetWorthDonut accounts={allAccounts} />
         </Card>
       </div>
+
+      {/* Investment Forecast */}
+      {investment.length > 0 && (
+        <InvestmentForecast totalInvestments={investment.reduce((s, a) => s + (a.balance || 0), 0)} />
+      )}
 
       {/* Income */}
       <div className="space-y-5">
