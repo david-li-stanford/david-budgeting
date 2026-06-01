@@ -211,11 +211,13 @@ export const getTellerTransactions = async (appAccountId) => {
 
 // Edge Function calls
 export const discoverTellerAccounts = async (accessToken) => {
-  const { data, error } = await supabase.functions.invoke('discover-teller', {
-    body: { access_token: accessToken },
+  const res = await fetch('/api/discover', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ access_token: accessToken }),
   })
-  if (error) throw new Error(typeof error.message === 'string' ? error.message : JSON.stringify(error))
-  if (data?.error) throw new Error(typeof data.error === 'string' ? data.error : JSON.stringify(data.error))
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error ?? 'Discovery failed')
   return data
 }
 
