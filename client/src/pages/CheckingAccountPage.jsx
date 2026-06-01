@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useCheckingAccounts } from '../hooks/useAccounts'
+import { useCreditAccounts } from '../hooks/useCreditAccounts'
 import { useExpenses } from '../hooks/useExpenses'
 import { useSettings } from '../hooks/useSettings'
 import { getAllocationForAccount } from '../utils/distribution'
 import { formatCurrency } from '../utils/formatCurrency'
 import ExpenseList from '../components/checking/ExpenseList'
+import LinkedCreditCard from '../components/checking/LinkedCreditCard'
 import CashFlowBarChart from '../components/charts/CashFlowBarChart'
 import ExpensePieChart from '../components/charts/ExpensePieChart'
 import MonthlyHistoryCard from '../components/checking/MonthlyHistoryCard'
@@ -46,16 +48,19 @@ function EditAccountModal({ account, onSave, onClose, onDelete }) {
 export default function CheckingAccountPage() {
   const { accountId } = useParams()
   const { accounts, loading: aLoading, updateAccount, removeAccount } = useCheckingAccounts()
+  const { accounts: allCreditAccounts, loading: cLoading } = useCreditAccounts()
   const { expenses, loading: eLoading, addExpense, updateExpense, removeExpense } = useExpenses(accountId)
   const { settings } = useSettings()
   const [showEdit, setShowEdit] = useState(false)
 
-  if (aLoading || eLoading) {
+  if (aLoading || eLoading || cLoading) {
     return <div className="flex items-center justify-center h-full p-20"><Spinner size="lg" /></div>
   }
 
   const account = accounts.find((a) => a.id === accountId)
   if (!account) return <div className="p-8 text-warmGray">Account not found.</div>
+
+  const linkedCards = allCreditAccounts.filter((a) => a.checking_account_id === accountId)
 
   const allocatedIncome = getAllocationForAccount(settings?.monthlyIncome || 0, settings?.distribution || [], accountId)
 
@@ -146,6 +151,16 @@ export default function CheckingAccountPage() {
           onDelete={handleDeleteExpense}
         />
       </Card>
+
+      {/* Linked Credit Cards */}
+      {linkedCards.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="section-title">Credit Cards</h2>
+          {linkedCards.map((card) => (
+            <LinkedCreditCard key={card.id} account={card} />
+          ))}
+        </div>
+      )}
 
       {showEdit && (
         <EditAccountModal

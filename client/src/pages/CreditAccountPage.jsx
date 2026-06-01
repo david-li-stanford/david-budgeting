@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useCreditAccounts } from '../hooks/useCreditAccounts'
+import { useCheckingAccounts } from '../hooks/useAccounts'
 import { useTellerTransactions } from '../hooks/useTellerTransactions'
 import { formatCurrency } from '../utils/formatCurrency'
 import Card from '../components/ui/Card'
@@ -41,9 +42,14 @@ const CATEGORY_LABELS = {
 }
 
 function EditAccountModal({ account, onSave, onClose, onDelete }) {
-  const [form, setForm] = useState({ name: account.name, institution: account.institution || '' })
+  const [form, setForm] = useState({
+    name: account.name,
+    institution: account.institution || '',
+    checking_account_id: account.checking_account_id || '',
+  })
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
   const navigate = useNavigate()
+  const { accounts: checkingAccounts } = useCheckingAccounts()
 
   const handleDelete = async () => {
     if (window.confirm(`Delete "${account.name}"?`)) {
@@ -57,6 +63,20 @@ function EditAccountModal({ account, onSave, onClose, onDelete }) {
       <div className="space-y-4">
         <Input label="Account Name" value={form.name} onChange={(e) => set('name', e.target.value)} />
         <Input label="Institution" value={form.institution} onChange={(e) => set('institution', e.target.value)} />
+        <div>
+          <label className="label">Linked checking account</label>
+          <select
+            className="input-field"
+            value={form.checking_account_id}
+            onChange={(e) => set('checking_account_id', e.target.value)}
+          >
+            <option value="">Not linked</option>
+            {checkingAccounts.map((a) => (
+              <option key={a.id} value={a.id}>{a.name}</option>
+            ))}
+          </select>
+          <p className="text-xs text-warmGray mt-1">Charges will appear as expenses on the linked account.</p>
+        </div>
         <div className="flex gap-2 pt-2">
           <Button variant="primary" onClick={() => { onSave(account.id, form); onClose() }}>Save</Button>
           <Button variant="secondary" onClick={onClose}>Cancel</Button>
